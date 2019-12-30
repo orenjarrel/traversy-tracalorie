@@ -58,6 +58,23 @@ const ItemCtrl = (function() {
 
       return found;
     },
+    updateItem: function(name, calories) {
+      // Calories to number
+      calories = parseInt(calories);
+
+      let found = null;
+
+      // loop through items
+      data.items.forEach(function(item) {
+        if (item.id === data.currentItem.id) {
+          item.name = name;
+          item.calories = calories;
+          found = item;
+        }
+      });
+
+      return found;
+    },
     setCurrentItem: function(item) {
       data.currentItem = item;
     },
@@ -88,6 +105,7 @@ const ItemCtrl = (function() {
 const UICtrl = (function() {
   const UISelectors = {
     itemList: '#item-list',
+    listItems: '#item-list li',
     addBtn: '.add-btn',
     updateBtn: '.update-btn',
     deleteBtn: '.delete-btn',
@@ -144,6 +162,26 @@ const UICtrl = (function() {
         .querySelector(UISelectors.itemList)
         .insertAdjacentElement('beforeend', li);
     },
+    updateListItem: function(item) {
+      // Get list items from the DOM
+      let listItems = document.querySelectorAll(UISelectors.listItems); // gives us a Node list
+
+      // Need to convert Node list into an array
+      listItems = Array.from(listItems);
+
+      listItems.forEach(function(listItem) {
+        const itemID = listItem.getAttribute('id'); // get the ID
+
+        if (itemID === `item-${item.id}`) {
+          document.querySelector(
+            `#${itemID}`
+          ).innerHTML = `<strong>${item.name}: </strong> <em>${item.calories} Calories</em>
+          <a href="#" class="secondary-content">
+            <i class="edit-item fa fa-pencil"></i>
+          </a>`;
+        }
+      });
+    },
     clearInput: function() {
       document.querySelector(UISelectors.itemNameInput).value = '';
       document.querySelector(UISelectors.itemCaloriesInput).value = '';
@@ -188,8 +226,6 @@ const UICtrl = (function() {
 
 // App Controller
 const App = (function(ItemCtrl, UICtrl) {
-  // console.log('ItemCtr.logData', ItemCtrl.logData());
-
   // Load event listeners
   const loadEventListeners = function() {
     const UISelectors = UICtrl.getSelectors();
@@ -221,8 +257,6 @@ const App = (function(ItemCtrl, UICtrl) {
 
   // Add item submit
   const itemAddSubmit = function(e) {
-    // console.log('itemAdd');
-
     // Get form input from UI Controller
     const input = UICtrl.getItemInput();
 
@@ -275,7 +309,22 @@ const App = (function(ItemCtrl, UICtrl) {
 
   // Update item submit
   const itemUpdateSubmit = function(e) {
-    console.log('update');
+    // item input
+    const input = UICtrl.getItemInput(); // ex. {name: "Test Meal 2", calories: "10009"}
+
+    // Update item
+    const updatedItem = ItemCtrl.updateItem(input.name, input.calories);
+
+    // Update the UI
+    UICtrl.updateListItem(updatedItem);
+
+    // Get total calories
+    const totalCalories = ItemCtrl.getTotalCalories();
+
+    // Add total calories to UI
+    UICtrl.showTotalCalories(totalCalories);
+
+    UICtrl.clearEditState();
 
     e.preventDefault;
   };
